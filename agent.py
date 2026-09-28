@@ -3,12 +3,15 @@ import re
 import subprocess
 from dotenv import load_dotenv
 import google.generativeai as genai
+import requests
+import datetime
+import sys
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-2.5-flash")
 
-import sys
+
 
 source_file = sys.argv[1]
 test_file = sys.argv[2]
@@ -24,6 +27,7 @@ print("Output: ",result.stderr)
 max_attempts = 3
 attempt = 0
 passed = False
+fix_applied = False
 
 while attempt < max_attempts and not passed:
     attempt += 1
@@ -69,6 +73,7 @@ while attempt < max_attempts and not passed:
     if "1 passed" in recheck.stdout:
         passed = True 
         print("Test passed after fix! Fix successful.")
+        fix_applied = True
 
 if not passed:
     print(f"Gave up after {max_attempts} attempts. Still failing.")
@@ -77,4 +82,12 @@ if not passed:
 result2 = subprocess.run(["pytest", test_file], capture_output=True, text=True)
 print("RE-TEST RESULT:")
 print(result2.stdout)
+
+if passed and fix_applied:
+    branch_name = f"agent-fix-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    
+    subprocess.run(["git", "checkout", "-b", branch_name])
+    subprocess.run(["git", "add", source_file])
+    subprocess.run(["git", "commit", "-m", f"Agent fix: resolved test failure in {source_file}"])
+    subprocess.run(["git", "push", "-u", "origin", branch_name])
 
