@@ -62,7 +62,7 @@ while attempt < max_attempts and not passed:
     """
     response = model.generate_content(prompt)
     match = re.search(r"```python(.*?)```", response.text, re.DOTALL)
-    fixed_code = match.group(1).strip() + "\n"
+    fixed_code = match.group(1).strip() + "\n" 
 
     
     with open(source_file, "w") as f:
