@@ -110,4 +110,5 @@ if passed and fix_applied:
     response = requests.post(url, headers=headers, json=data)
     print("PR status:", response.status_code)
     print("PR link:", response.json().get("html_url"))
+    subprocess.run(["git", "checkout", "main"])
 
