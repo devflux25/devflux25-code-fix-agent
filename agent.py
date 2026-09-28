@@ -62,7 +62,7 @@ while attempt < max_attempts and not passed:
     """
     response = model.generate_content(prompt)
     match = re.search(r"```python(.*?)```", response.text, re.DOTALL)
-    fixed_code = match.group(1)
+    fixed_code = match.group(1).strip() + "\n"
 
     
     with open(source_file, "w") as f:
@@ -90,4 +90,24 @@ if passed and fix_applied:
     subprocess.run(["git", "add", source_file])
     subprocess.run(["git", "commit", "-m", f"Agent fix: resolved test failure in {source_file}"])
     subprocess.run(["git", "push", "-u", "origin", branch_name])
+
+    github_token = os.getenv("GITHUB_TOKEN")
+
+    url = "https://api.github.com/repos/devflux25/devflux25-code-fix-agent/pulls"
+
+    headers = {
+        "Authorization": f"Bearer {github_token}",
+        "Accept": "application/vnd.github+json",
+    }
+
+    data = {
+        "title": f"Agent fix: {source_file}",
+        "head": branch_name,
+        "base": "main",
+        "body": "This fix was generated and verified automatically by code-fix-agent. The test suite passed after the change.",
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+    print("PR status:", response.status_code)
+    print("PR link:", response.json().get("html_url"))
 
