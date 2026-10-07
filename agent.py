@@ -11,6 +11,18 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-2.5-flash")
 
+remote_url = subprocess.run(
+    ["git", "remote", "get-url", "origin"],
+    capture_output=True, text=True
+).stdout.strip()
+
+print(remote_url)
+
+repo_path = remote_url.split("github.com/")[1]
+repo_path = repo_path.replace(".git", "")
+
+print(repo_path)
+
 
 
 source_file = sys.argv[1]
@@ -93,7 +105,7 @@ if passed and fix_applied:
 
     github_token = os.getenv("GITHUB_TOKEN")
 
-    url = "https://api.github.com/repos/devflux25/devflux25-code-fix-agent/pulls"
+    url = f"https://api.github.com/repos/{repo_path}/pulls"
 
     headers = {
         "Authorization": f"Bearer {github_token}",
